@@ -34,24 +34,52 @@ class _MyHomePageState extends State<MyHomePage> {
   late WebViewController _controller1;
   late WebViewController _controller2;
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
 
     _controller = WebViewController()
-  ..setJavaScriptMode(JavaScriptMode.unrestricted)
-  ..loadRequest(
-    Uri.parse("https://flutter.dev/"),
-  );
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            setState(() {
+              _isLoading = true;
+            });
+          },
+          onPageFinished: (url) {
+            setState(() {
+              _isLoading = false;
+            });
+          },
+          onNavigationRequest: (request) {
+            if (request.url.startsWith('https://flutter.dev') ||
+                request.url.startsWith('https://docs.flutter.dev')) {
+              return NavigationDecision.navigate;
+            }
 
+            return NavigationDecision.prevent;
+          },
+        ),
+      )
+      ..loadRequest(
+        Uri.parse('https://flutter.dev'),
+      );
 
     _controller1 = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadFlutterAsset('assets/index.html');
 
     _controller2 = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadHtmlString(
-        "<head><title>HTML</title></head>"
-        "<body><h1>Read Local HTML file - </h1></body></html>",
+        '''
+        <head><title>HTML</title></head>
+        <body><h1>Read Local HTML file</h1></body>
+        </html>
+        ''',
       );
   }
 
@@ -68,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 _controller.goBack();
               }
             },
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
           ),
           IconButton(
             onPressed: () async {
@@ -76,24 +104,30 @@ class _MyHomePageState extends State<MyHomePage> {
                 _controller.goForward();
               }
             },
-            icon: Icon(Icons.arrow_forward),
+            icon: const Icon(Icons.arrow_forward),
           ),
           IconButton(
             onPressed: () {
               _controller.reload();
             },
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
-
-      // body: WebViewWidget(controller: _controller),
       body: Column(
         children: [
           Expanded(
-            child: WebViewWidget(controller: _controller),
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                if (_isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
           ),
-            const Divider(thickness: 5, height: 5),
+          const Divider(thickness: 5, height: 5),
           Expanded(
             child: WebViewWidget(controller: _controller1),
           ),
