@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-
-
-
 void main() {
   runApp(const MyApp());
 }
@@ -11,107 +8,101 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'WebView3',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'WebView3'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
+
 class _MyHomePageState extends State<MyHomePage> {
-  late final WebViewController _controller;
+  late WebViewController _controller;
+  late WebViewController _controller1;
+  late WebViewController _controller2;
+
   @override
   void initState() {
     super.initState();
+
     _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            debugPrint('Loading progress: $progress%');
-          },
-          onPageStarted: (String url) {
-            debugPrint('Page started loading: $url');
-          },
-          onPageFinished: (String url) {
-            debugPrint('Page finished loading: $url');
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://flutter.dev'));
-      // ..loadFlutterAsset('assets/index.html');
+  ..setJavaScriptMode(JavaScriptMode.unrestricted)
+  ..loadRequest(
+    Uri.parse("https://flutter.dev/"),
+  );
+
+
+    _controller1 = WebViewController()
+      ..loadFlutterAsset('assets/index.html');
+
+    _controller2 = WebViewController()
+      ..loadHtmlString(
+        "<head><title>HTML</title></head>"
+        "<body><h1>Read Local HTML file - </h1></body></html>",
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WebView Navigation'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.arrow_back),
             onPressed: () async {
               if (await _controller.canGoBack()) {
-                await _controller.goBack();
+                _controller.goBack();
               }
             },
+            icon: Icon(Icons.arrow_back),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward),
             onPressed: () async {
               if (await _controller.canGoForward()) {
-                await _controller.goForward();
+                _controller.goForward();
               }
             },
+            icon: Icon(Icons.arrow_forward),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _controller.reload(),
+            onPressed: () {
+              _controller.reload();
+            },
+            icon: Icon(Icons.refresh),
           ),
         ],
       ),
-      body: WebViewWidget(controller: _controller),
+
+      // body: WebViewWidget(controller: _controller),
+      body: Column(
+        children: [
+          Expanded(
+            child: WebViewWidget(controller: _controller),
+          ),
+            const Divider(thickness: 5, height: 5),
+          Expanded(
+            child: WebViewWidget(controller: _controller1),
+          ),
+          const Divider(thickness: 5, height: 5),
+          Expanded(
+            child: WebViewWidget(controller: _controller2),
+          ),
+        ],
+      ),
     );
   }
 }
